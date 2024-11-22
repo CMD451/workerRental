@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  mongo_1:
+    build:
+      context: .
+      dockerfile: customMongoDB
+    container_name: mongo1
+    network_mode: host
+    hostname: localhost
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=ADMIN
+      - MONGO_INITDB_ROOT_PASSWORD=ADMINPASSWORD
+      - MONGO_INITDB_DATABASE=workerRental
+    command: --config /etc/mongod.conf --port 27017
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27017", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_2:
+    build:
+      context: .
+      dockerfile: customMongoDB
+    container_name: mongo2
+    network_mode: host
+    hostname: localhost
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=ADMIN
+      - MONGO_INITDB_ROOT_PASSWORD=ADMINPASSWORD
+      - MONGO_INITDB_DATABASE=workerRental
+    command: --config /etc/mongod.conf --port 27018
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27018", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_3:
+    build:
+      context: .
+      dockerfile: customMongoDB
+    container_name: mongo3
+    network_mode: host
+    hostname: localhost
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=ADMIN
+      - MONGO_INITDB_ROOT_PASSWORD=ADMINPASSWORD
+      - MONGO_INITDB_DATABASE=workerRental
+    command: --config /etc/mongod.conf --port 27019
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27019", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongoinit:
+    build:
+      context: .
+      dockerfile: customMongoDB
+    container_name: mongodbinit
+    network_mode: host
+    depends_on:
+      mongo_1:
+        condition: service_healthy
+      mongo_2:
+        condition: service_healthy
+      mongo_3:
+        condition: service_healthy
+    command: >
+      mongosh --host localhost:27017 --username ADMIN --password ADMINPASSWORD --authenticationDatabase admin --eval
+      '
+      rs.initiate(
+        {
+          _id: "replica_set_single",
+          version: 1,
+          members: [
+            {_id:0, host : "localhost:27017" },
+            {_id:1, host : "localhost:27018" },
+            {_id:2, host : "localhost:27019" }
+          ]
+        }
+      );
+      '
+
+networks: {}

@@ -39,7 +39,9 @@ public class MongoConnection {
                 credential(MongoCredential.createCredential(
                         username, authDatabaseName, password.toCharArray()
                 )).
-                applyConnectionString(new ConnectionString(mongoConnectionPath)).
+                applyConnectionString(new ConnectionString(
+                        "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=replica_set_single"
+                )).
                 uuidRepresentation(UuidRepresentation.STANDARD).
                 codecRegistry(
                         CodecRegistries.fromRegistries(
